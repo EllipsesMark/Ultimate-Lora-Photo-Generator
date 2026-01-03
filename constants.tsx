@@ -1,0 +1,185 @@
+
+import { DatasetPose } from "./types";
+
+export const CLOTHING_LIST = [
+  "burgundy ribbed slim-fit deep V long-sleeve tee",
+  "heather grey basic cotton blend deep V long-sleeve",
+  "emerald green off the shoulder deep v long sleeve",
+  "white seamless cotton spaghetti strap camisole tank",
+  "sand colored long basic spaghetti strap cami",
+  "mocha brown fitted bodysuit with deep V neck",
+  "crimson lace corset-style crop top",
+  "lavender spaghetti strap crop top",
+  "hot pink strapless bandeau top",
+  "translucent black overlay long-sleeve blouse",
+  "turquoise halter neck crop top",
+  "coral cut-out shoulder long-sleeve top",
+  "white lace-up corset top",
+  "neon orange criss-cross halter neck top",
+  "pink mesh long-sleeve crop top over lining",
+  "scarlet red glossy vinyl bodysuit with high neck",
+  "white tank crop top",
+  "white lace corseted bodice top",
+  "canary yellow ribbed crop tank",
+  "tan mesh bodysuit with opaque flocked patterns",
+  "black open-weave long sleeve top over crop top",
+  "denim corset-style crop top",
+  "mint green ruched front bandeau top",
+  "violet chiffon blouse with deep V",
+  "lime green keyhole front crop top",
+  "cherry red wrap-around crop top",
+  "navy blue racerback cropped tank",
+  "neon yellow strappy open-back top",
+  "pastel blue sweetheart neckline corset top",
+  "orange smooth nylon bodysuit",
+  "polka dot tulle overlay top",
+  "gold metal-mesh halter top",
+  "lavender silk camisole with lace edges",
+  "baby pink fine-knit cropped tee",
+  "fuchsia racerback bodysuit",
+  "cyan blue racer front crop top",
+  "red gingham tie-front crop top",
+  "black lace long sleeve bodysuit",
+  "white eyelet lace corset top",
+  "copper metallic fitted camisole",
+  "royal blue satin wrap blouse",
+  "tangerine orange halter neck bodysuit",
+  "white ribbed sleeveless turtleneck crop",
+  "crimson red crop top",
+  "deep blue silk slip top",
+  "beige glitter mesh bodysuit",
+  "matte black smooth leather corset top",
+
+  // --- Bottoms ---
+  "indigo wash mid-rise skinny form-fitted jeans",
+  "navy blue volleyball-style spandex shorts",
+  "neon pink spandex shorts with short inseam",
+  "matte black high-waisted spandex leggings",
+  "charcoal grey form-fitted pencil skirt",
+  "gray tube top form-fitted mini skirt",
+  "black bandeau top and neon green mesh insert leggings",
+  "slate gray compression fit yoga set",
+  "electric blue high-hem mini skirt with side slit",
+  "black smooth leather biker shorts with zippers",
+  "purple metallic fitted leggings",
+  "pink geometric print leggings",
+  "black glossy vinyl form-fitted trousers", 
+  "silver holographic spandex shorts",
+  "black leggings with mesh side cutouts",
+  "maroon smooth leather pencil skirt", 
+  "rust colored ribbed knit bike shorts",
+  "deep purple compression leggings",
+  "black leggings with translucent panels",
+  "tan smooth leather form-fitted mini skirt", 
+  "olive green heavy cotton mini skirt",
+  "leopard print spandex bike shorts",
+  "blush pink pleated tennis skirt",
+  "silver metallic leggings",
+  "mustard yellow smooth leather fringe mini skirt", 
+
+  // --- Dresses & Rompers ---
+  "ruby red bodycon mini dress with plunging neckline",
+  "burnt orange halter neck cut-out midi dress",
+  "midnight black semi-sheer panel bodycon dress",
+  "champagne gold open-back slip maxi dress",
+  "royal blue asymmetrical slit form-fitted dress",
+  "olive green lace-up front mini dress",
+  "dusty rose off-shoulder ruched bodycon dress",
+  "dark gray strapless wrap dress",
+  "gray purple ruched side bodycon dress",
+  "metallic silver open-back halter mini dress",
+  "sapphire blue plunging neckline jumpsuit",
+  "magenta asymmetric hem bodycon dress",
+  "beige panel high-neck dress",
+  "mustard yellow form-fitted romper with shorts",
+  "glossy black vinyl strapless mini dress", 
+  "deep black bodysuit with high hips",
+  "ice blue ribbed knit tank dress with side cut-outs",
+  "pearl white satin slip dress with cowl neck",
+  "forest green strapless mini dress",
+  "rose gold sequin plunge neck mini dress",
+  "cobalt blue one-shoulder bodycon dress",
+  "white ribbed knit bodycon midi dress",
+  "beige fine-knit form-fitted sweater dress",
+  "black satin corset dress with lace trim",
+  "white off-shoulder bandage dress",
+  "charcoal grey ribbed maxi dress with side slit",
+  "neon green mesh overlay t-shirt dress",
+  "black strappy cutout mini dress",
+  "black mesh panel maxi dress with bodysuit underlay"
+];
+
+export const POSE_DEFINITIONS: DatasetPose[] = [
+  // --- PORTRAITS ---
+  { id: 'p1', group: 'portrait', label: 'ANGLE 1: REAR 3/4 LEFT', description: 'View from behind the subject toward the left, seeing the back of the jaw and left cheek' },
+  { id: 'p2', group: 'portrait', label: 'ANGLE 2: 90 PROFILE LEFT', description: '90-degree side profile portrait facing toward the left edge of the frame' },
+  { id: 'p3', group: 'portrait', label: 'ANGLE 3: 45 LEFT', description: '45-degree angle portrait facing toward the left side, looking back at camera' },
+  { id: 'p4', group: 'portrait', label: 'ANGLE 4: CENTER', description: 'Direct frontal portrait, centered subject looking directly at the camera' },
+  { id: 'p5', group: 'portrait', label: 'ANGLE 5: 45 RIGHT', description: '45-degree angle portrait facing toward the right side, looking back at camera' },
+  { id: 'p6', group: 'portrait', label: 'ANGLE 6: 90 PROFILE RIGHT', description: '90-degree side profile portrait facing toward the right edge of the frame' },
+  { id: 'p7', group: 'portrait', label: 'ANGLE 7: REAR 3/4 RIGHT', description: 'View from behind the subject toward the right, seeing the back of the jaw and right cheek' },
+
+  // --- CAMERA ANGLES & LIGHTING ---
+  { id: 'p8', group: 'portrait', label: 'CAM: LOW ANGLE UP', description: 'Low angle head and shoulders portrait, subject looking up at camera' },
+  { id: 'p9', group: 'portrait', label: 'CAM: LOW INTENSE', description: 'Low angle portrait with intense gaze into the lens' },
+  { id: 'p10', group: 'portrait', label: 'CAM: HIGH ANGLE', description: 'High angle head and shoulders portrait, looking down directly at camera' },
+  { id: 'p11', group: 'portrait', label: 'CAM: OVER SHOULDER', description: 'Over-the-shoulder portrait, subject looking back at camera over her right shoulder' },
+  { id: 'p12', group: 'portrait', label: 'LIGHT: REMBRANDT', description: 'Slightly turned 3/4 angle portrait with dramatic Rembrandt lighting' },
+  { id: 'p13', group: 'portrait', label: 'EXP: THOUGHTFUL', description: 'Head and shoulders portrait, subject looking away toward the left' },
+
+  // --- EXPRESSIONS ---
+  { id: 'p14', group: 'portrait', label: 'VAR: SCRUNCH', description: 'Direct frontal portrait, subject looking directly at camera and scrunching nose' },
+  { id: 'p15', group: 'portrait', label: 'VAR: LAUGHING', description: 'Head and shoulders portrait, subject laughing while looking at camera' },
+  { id: 'p16', group: 'portrait', label: 'VAR: WINK', description: 'Head and shoulders portrait, subject winking at camera' },
+  { id: 'p17', group: 'portrait', label: 'VAR: BITING LIP', description: 'Shoulder-up portrait, subject biting lower lip looking at camera' },
+  { id: 'p18', group: 'portrait', label: 'VAR: EYES CLOSED', description: 'Direct frontal portrait with eyes closed' },
+  { id: 'p19', group: 'portrait', label: 'VAR: TILTED', description: 'Frontal portrait with head tilted toward the shoulder, smiling showing teethlooking directly at camera' },
+  
+  // --- UPPER BODY ---
+  { id: 'u1', group: 'upper', label: 'UPPER BODY 1', description: 'Waist-up shot, front facing centered looking at camera, smiling showing teeth' },
+  { id: 'u2', group: 'upper', label: 'UPPER BODY 2', description: 'Waist-up shot, subject facing toward the left side of frame' },
+  { id: 'u3', group: 'upper', label: 'UPPER BODY 3', description: 'Waist-up shot, subject facing toward the right side of frame' },
+  { id: 'u4', group: 'upper', label: 'UPPER BODY 4', description: 'Waist-up with hands on hips, looking at camera' },
+  { id: 'u5', group: 'upper', label: 'UPPER BODY 5', description: 'Mid-thigh-up shot facing toward the left profile' },
+  { id: 'u6', group: 'upper', label: 'UPPER BODY 6', description: 'Seated waist-up portrait facing at camera' },
+  { id: 'u7', group: 'upper', label: 'UPPER BODY 7', description: 'Waist-up shot, hands fixing hair, looking at camera' },
+  { id: 'u8', group: 'upper', label: 'UPPER BODY 8', description: 'Waist-up shot leaning against a wall, facing toward camera' },
+  { id: 'u9', group: 'upper', label: 'UPPER BODY 9', description: 'Rear view waist-up showing the back and shoulders' },
+  { id: 'u10', group: 'upper', label: 'UPPER BODY 10', description: 'Strictly symmetrical waist-up frontal view looking at camera, smiling showing teeth' },
+  { id: 'u11', group: 'upper', label: 'UPPER BODY 11', description: 'Waist-up shot with arms raised, looking at camera' },
+  { id: 'u12', group: 'upper', label: 'UPPER BODY 12', description: 'Mid-thigh-up shot with hands in pockets' },
+  { id: 'u13', group: 'upper', label: 'UPPER BODY 13', description: 'Waist-up shot with arms crossed, looking at camera, laughing' },
+  { id: 'u14', group: 'upper', label: 'UPPER BODY 14', description: 'Upper body walking forward, facing toward the left' },
+  { id: 'u15', group: 'upper', label: 'UPPER BODY 15', description: 'Upper body high angle, looking at camera' },
+  { id: 'u16', group: 'upper', label: 'UPPER BODY 16', description: 'Waist-up leaning on elbow' },
+  { id: 'u17', group: 'upper', label: 'UPPER BODY 17', description: 'Upper body, hand against cheek, looking at camera' },
+  { id: 'u18', group: 'upper', label: 'UPPER BODY 18', description: 'High angle selfie shot, looking at camera' },
+  { id: 'u19', group: 'upper', label: 'UPPER BODY 19', description: 'Waist-up shot reaching high, looking at camera' },
+
+  // --- FULL BODY ---
+  { id: 'f1', group: 'full', label: 'FULL BODY 1', description: 'Full body power pose looking at camera, angry expression' },
+  { id: 'f2', group: 'full', label: 'FULL BODY 2', description: 'Full body side profile facing toward the right' },
+  { id: 'f3', group: 'full', label: 'FULL BODY 3', description: 'Full body rear view' },
+  { id: 'f4', group: 'full', label: 'FULL BODY 4', description: 'Full body seated on ground looking directly at camera' },
+  { id: 'f5', group: 'full', label: 'FULL BODY 5', description: 'Full body lying on back' },
+  { id: 'f6', group: 'full', label: 'FULL BODY 6', description: 'Full body leaning against wall' },
+  { id: 'f7', group: 'full', label: 'FULL BODY 7', description: 'Low angle full body looking directly at camera' },
+  { id: 'f8', group: 'full', label: 'FULL BODY 8', description: 'Full body squatting pose' },
+  { id: 'f9', group: 'full', label: 'FULL BODY 9', description: 'Full body lying on stomach' }
+];
+
+export const FACIAL_EXPRESSIONS = [
+  "stoic neutral expression",
+  "serious concentrated expression",
+  "calm neutral gaze"
+];
+
+export const EYE_COLOR_OPTIONS = ["Blue", "Green", "Brown", "Hazel", "Grey", "Amber"];
+export const BODY_BUILD_OPTIONS = ["Slim", "Athletic", "Curvy", "Muscular", "Average"];
+export const CHEST_SIZE_OPTIONS = ["Small", "Average", "Full", "Voluptuous"];
+export const HIP_SIZE_OPTIONS = ["Slim", "Average", "Wide", "Curvy"];
+
+export const MODELS = {
+  IMAGE: 'gemini-3-pro-image-preview',
+  ANALYSIS: 'gemini-3-flash-preview'
+};

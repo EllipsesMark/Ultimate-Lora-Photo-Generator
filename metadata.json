@@ -1,0 +1,7 @@
+{
+  "name": "Ultimate Character Creator",
+  "description": "A high-end character consistency and dataset generation tool for AI training and digital influencers. Lock in character identity and generate studio-grade pose variations or comprehensive datasets.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
