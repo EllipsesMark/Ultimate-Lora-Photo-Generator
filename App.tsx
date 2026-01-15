@@ -1,11 +1,10 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Upload, Sparkles, Grid, Layout, CheckCircle2, Loader2, AlertCircle,
   Key, Trash2, Image as ImageIcon, X, Maximize2, Sliders, User,
   ChevronDown, ChevronUp, Fingerprint, DownloadCloud, Lock, Unlock,
   StopCircle, AlertTriangle, History, Terminal, ExternalLink, ShieldCheck, Scissors,
-  FileText, FolderOpen, Archive, Tag, RefreshCcw
+  FileText, FolderOpen, Archive, Tag, RefreshCcw, Wand2, PenLine, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import JSZip from 'jszip';
 import { GeminiService } from './services/geminiService';
@@ -23,6 +22,8 @@ interface FailedAsset {
   timestamp: number;
 }
 
+type ProfileMode = 'auto' | 'manual';
+
 const App: React.FC = () => {
   // --- AUTH STATE ---
   const [userApiKey, setUserApiKey] = useState("");
@@ -31,6 +32,10 @@ const App: React.FC = () => {
   // --- PROJECT PERSISTENCE STATE ---
   const [projectName, setProjectName] = useState("Character_Alpha");
   const [gallery, setGallery] = useState<GeneratedImage[]>([]);
+
+  // --- PROFILE MODE STATE ---
+  const [profileMode, setProfileMode] = useState<ProfileMode>('auto');
+  const [manualCharacterProfile, setManualCharacterProfile] = useState("");
 
   // --- APP STATE ---
   const [sourceImage, setSourceImage] = useState<string | null>(null);
@@ -67,6 +72,24 @@ const App: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isAbortedRef = useRef(false);
 
+  // Get the active profile based on mode
+  const getActiveProfile = (): string | null => {
+    if (profileMode === 'auto') {
+      return characterProfile;
+    } else {
+      return manualCharacterProfile.trim() || null;
+    }
+  };
+
+  // Check if we're ready to generate (have a valid profile)
+  const isProfileReady = (): boolean => {
+    if (profileMode === 'auto') {
+      return !!characterProfile;
+    } else {
+      return manualCharacterProfile.trim().length > 0;
+    }
+  };
+
   // Clear timeout for confirmation mode
   useEffect(() => {
     if (clearConfirmMode) {
@@ -81,7 +104,10 @@ const App: React.FC = () => {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setSourceImage(base64String);
-        analyzeImage(base64String.split(',')[1]);
+        // Only auto-analyze if in auto mode
+        if (profileMode === 'auto') {
+          analyzeImage(base64String.split(',')[1]);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -119,6 +145,12 @@ const App: React.FC = () => {
     }
   };
 
+  const triggerAnalysis = () => {
+    if (sourceImage && profileMode === 'auto') {
+      analyzeImage(sourceImage.split(',')[1]);
+    }
+  };
+
   const stopGeneration = () => {
     isAbortedRef.current = true;
     setTask(prev => ({ ...prev, status: 'stopped' }));
@@ -130,9 +162,10 @@ const App: React.FC = () => {
   };
 
   const getLockedIdentityMod = (isPortrait: boolean = false, isSideProfile: boolean = false) => {
-    if (!characterProfile) return "";
+    const activeProfile = getActiveProfile();
+    if (!activeProfile) return "";
     
-    let profile = characterProfile;
+    let profile = activeProfile;
     const hairPart = profile.match(/HAIR:\s*([^.]+)/i)?.[1] || "";
     
     if (isPortrait && profile) {
@@ -210,7 +243,7 @@ const App: React.FC = () => {
   };
 
   const startDatasetMode = async () => {
-    if (!sourceImage || !characterProfile || !isKeyConfirmed || selectedPoseIds.size === 0) return;
+    if (!sourceImage || !isProfileReady() || !isKeyConfirmed || selectedPoseIds.size === 0) return;
     isAbortedRef.current = false;
     
     setTask({ status: 'generating', total: selectedPoseIds.size, current: 0, images: [] });
@@ -363,11 +396,20 @@ const App: React.FC = () => {
     if (window.confirm("Reset entire studio workspace? This does NOT clear your saved Bin images.")) {
       setSourceImage(null);
       setCharacterProfile(null);
+      setManualCharacterProfile("");
       setTask({ status: 'pending', total: 0, current: 0, images: [] });
       setSelectedPoseIds(new Set());
       setFailedAssets([]);
       setIsBodyLocked(false);
       setIsHairLocked(true);
+    }
+  };
+
+  const handleModeSwitch = (mode: ProfileMode) => {
+    setProfileMode(mode);
+    // If switching to auto and we have an image but no profile, trigger analysis
+    if (mode === 'auto' && sourceImage && !characterProfile) {
+      analyzeImage(sourceImage.split(',')[1]);
     }
   };
 
@@ -473,7 +515,7 @@ const App: React.FC = () => {
             <div>
               <h1 className="text-3xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-emerald-300 to-blue-400 uppercase">Ultimate LoRA Photo Generator</h1>
               <div className="flex items-center gap-4 mt-2">
-                <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-[0.4em] leading-none">v3.3 Pipeline</p>
+                <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-[0.4em] leading-none">v3.4 Pipeline</p>
                 <div className="h-3 w-[1px] bg-white/10" />
                 <div className="flex items-center gap-2 group">
                   <Tag className="w-3.5 h-3.5 text-neutral-600 group-hover:text-emerald-500 transition-colors" />
@@ -532,12 +574,116 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {!sourceImage ? (
+        {!sourceImage && profileMode === 'auto' ? (
           <div className="max-w-6xl mx-auto mt-24 animate-in fade-in slide-in-from-bottom-16 duration-1000">
+            {/* Mode Toggle at Top */}
+            <div className="flex justify-center mb-12">
+              <div className="inline-flex bg-black/60 rounded-full p-2 border border-white/10 shadow-2xl">
+                <button 
+                  onClick={() => handleModeSwitch('auto')}
+                  className={`flex items-center gap-3 px-10 py-5 rounded-full text-[12px] font-black uppercase tracking-widest transition-all ${profileMode === 'auto' ? 'bg-emerald-500 text-white shadow-xl' : 'text-neutral-500 hover:text-neutral-300'}`}
+                >
+                  <Wand2 className="w-5 h-5" />
+                  Auto-Analyze
+                </button>
+                <button 
+                  onClick={() => handleModeSwitch('manual')}
+                  className={`flex items-center gap-3 px-10 py-5 rounded-full text-[12px] font-black uppercase tracking-widest transition-all ${profileMode === 'manual' ? 'bg-violet-500 text-white shadow-xl' : 'text-neutral-500 hover:text-neutral-300'}`}
+                >
+                  <PenLine className="w-5 h-5" />
+                  Manual Profile
+                </button>
+              </div>
+            </div>
+
             <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()} className={`group relative cursor-pointer aspect-[24/10] border-3 border-dashed rounded-[5rem] flex flex-col items-center justify-center gap-12 transition-all duration-1000 overflow-hidden ${isDragging ? 'border-emerald-500 bg-emerald-500/10 scale-[1.02]' : 'border-neutral-900 bg-neutral-900/10 hover:border-neutral-800'}`}>
               <div className="p-12 bg-black/50 rounded-[3rem] border border-white/5 shadow-4xl group-hover:scale-110 transition-transform duration-1000"><Upload className={`w-20 h-20 ${isDragging ? 'text-emerald-400' : 'text-neutral-700 group-hover:text-neutral-400'}`} /></div>
               <div className="text-center space-y-5 z-10 px-10"><p className="text-5xl font-black text-neutral-200 tracking-tighter uppercase">Drag and Drop your image here</p><p className="text-lg text-neutral-600 font-medium italic tracking-wide">Drop your character's image here. For best results, ensure the face is clear and the body shape is visible.</p></div>
               <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
+            </div>
+          </div>
+        ) : !sourceImage && profileMode === 'manual' ? (
+          <div className="max-w-6xl mx-auto mt-16 animate-in fade-in slide-in-from-bottom-16 duration-1000 space-y-12">
+            {/* Mode Toggle at Top */}
+            <div className="flex justify-center">
+              <div className="inline-flex bg-black/60 rounded-full p-2 border border-white/10 shadow-2xl">
+                <button 
+                  onClick={() => handleModeSwitch('auto')}
+                  className={`flex items-center gap-3 px-10 py-5 rounded-full text-[12px] font-black uppercase tracking-widest transition-all ${profileMode === 'auto' ? 'bg-emerald-500 text-white shadow-xl' : 'text-neutral-500 hover:text-neutral-300'}`}
+                >
+                  <Wand2 className="w-5 h-5" />
+                  Auto-Analyze
+                </button>
+                <button 
+                  onClick={() => handleModeSwitch('manual')}
+                  className={`flex items-center gap-3 px-10 py-5 rounded-full text-[12px] font-black uppercase tracking-widest transition-all ${profileMode === 'manual' ? 'bg-violet-500 text-white shadow-xl' : 'text-neutral-500 hover:text-neutral-300'}`}
+                >
+                  <PenLine className="w-5 h-5" />
+                  Manual Profile
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              {/* Image Upload (Optional in Manual Mode) */}
+              <div onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()} className={`group relative cursor-pointer aspect-square border-3 border-dashed rounded-[4rem] flex flex-col items-center justify-center gap-8 transition-all duration-1000 overflow-hidden ${isDragging ? 'border-violet-500 bg-violet-500/10 scale-[1.02]' : 'border-neutral-900 bg-neutral-900/10 hover:border-neutral-800'}`}>
+                <div className="p-10 bg-black/50 rounded-[2.5rem] border border-white/5 shadow-4xl group-hover:scale-110 transition-transform duration-1000"><Upload className={`w-16 h-16 ${isDragging ? 'text-violet-400' : 'text-neutral-700 group-hover:text-neutral-400'}`} /></div>
+                <div className="text-center space-y-4 z-10 px-8">
+                  <p className="text-3xl font-black text-neutral-200 tracking-tighter uppercase">Reference Image</p>
+                  <p className="text-sm text-neutral-600 font-medium italic tracking-wide">Upload a reference image for the AI to work from</p>
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-violet-500/10 border border-violet-500/20 rounded-full">
+                    <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest">Required for generation</span>
+                  </div>
+                </div>
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*" />
+              </div>
+
+              {/* Manual Profile Input */}
+              <div className="bg-[#111]/30 border border-white/5 rounded-[4rem] p-10 shadow-4xl backdrop-blur-3xl space-y-8">
+                <div className="flex items-center gap-5">
+                  <div className="p-4 bg-violet-500/10 rounded-2xl border border-violet-500/20">
+                    <PenLine className="w-8 h-8 text-violet-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-neutral-200 uppercase tracking-tight">Character Profile</h2>
+                    <p className="text-[11px] text-neutral-600 font-bold uppercase tracking-[0.3em]">Describe your character in detail</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <textarea
+                    value={manualCharacterProfile}
+                    onChange={(e) => setManualCharacterProfile(e.target.value)}
+                    placeholder="Describe your character's appearance in detail...
+
+Example:
+25-year-old woman with long flowing platinum blonde hair reaching mid-back, bright green eyes with gold flecks, high cheekbones, soft feminine features, light skin with subtle freckles across the nose, athletic build with toned arms, medium height around 5'6..."
+                    className="w-full h-80 bg-black/60 border border-white/10 focus:border-violet-500/50 rounded-3xl px-8 py-6 text-neutral-300 text-sm leading-relaxed outline-none resize-none placeholder:text-neutral-700 placeholder:italic"
+                  />
+                  
+                  <div className="flex items-center justify-between px-4">
+                    <span className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">
+                      {manualCharacterProfile.length} characters
+                    </span>
+                    {manualCharacterProfile.trim().length > 0 && (
+                      <div className="flex items-center gap-2 text-violet-400">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Profile Ready</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-6 bg-violet-500/5 border border-violet-500/10 rounded-2xl space-y-3">
+                  <p className="text-[11px] font-black text-violet-400 uppercase tracking-widest">Tips for Best Results</p>
+                  <ul className="text-[12px] text-neutral-500 space-y-2 leading-relaxed">
+                    <li>• Include HAIR details: color, length, style, texture</li>
+                    <li>• Describe FACE: eye color, facial structure, skin tone</li>
+                    <li>• Specify BODY: build, proportions, notable features</li>
+                    <li>• Add AGE and overall vibe/aesthetic</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         ) : (
@@ -547,6 +693,26 @@ const App: React.FC = () => {
                 <div className="flex items-center justify-between mb-10">
                   <h2 className="text-[12px] font-black text-neutral-600 uppercase tracking-[0.5em]">Anchor DNA</h2>
                   <button onClick={resetAll} className="p-4 hover:bg-red-500/10 text-neutral-800 hover:text-red-500 rounded-2xl transition-all"><Trash2 className="w-6 h-6" /></button>
+                </div>
+
+                {/* Mode Toggle */}
+                <div className="mb-10">
+                  <div className="flex bg-black/60 rounded-full p-1.5 border border-white/10 shadow-inner">
+                    <button 
+                      onClick={() => handleModeSwitch('auto')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${profileMode === 'auto' ? 'bg-emerald-500 text-white shadow-lg' : 'text-neutral-500 hover:text-neutral-300'}`}
+                    >
+                      <Wand2 className="w-4 h-4" />
+                      Auto
+                    </button>
+                    <button 
+                      onClick={() => handleModeSwitch('manual')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${profileMode === 'manual' ? 'bg-violet-500 text-white shadow-lg' : 'text-neutral-500 hover:text-neutral-300'}`}
+                    >
+                      <PenLine className="w-4 h-4" />
+                      Manual
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="mb-12 space-y-10">
@@ -586,33 +752,94 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {isAnalyzing ? (
-                  <div className="flex items-center gap-6 text-emerald-400 bg-emerald-500/5 p-10 rounded-[2.5rem] border border-emerald-500/10 animate-pulse"><Loader2 className="w-8 h-8 animate-spin" /><span className="text-[13px] font-black uppercase tracking-[0.4em]">Deconstructing Identity...</span></div>
-                ) : characterProfile && (
-                  <div className="p-10 bg-emerald-500/5 rounded-[2.5rem] border border-emerald-500/10 space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 text-emerald-400">
-                        <CheckCircle2 className="w-7 h-7" />
-                        <span className="text-[13px] font-black uppercase tracking-widest">Bio-Profile Locked</span>
+                {/* AUTO MODE: Show analyzer status */}
+                {profileMode === 'auto' && (
+                  <>
+                    {isAnalyzing ? (
+                      <div className="flex items-center gap-6 text-emerald-400 bg-emerald-500/5 p-10 rounded-[2.5rem] border border-emerald-500/10 animate-pulse"><Loader2 className="w-8 h-8 animate-spin" /><span className="text-[13px] font-black uppercase tracking-[0.4em]">Deconstructing Identity...</span></div>
+                    ) : characterProfile ? (
+                      <div className="p-10 bg-emerald-500/5 rounded-[2.5rem] border border-emerald-500/10 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 text-emerald-400">
+                            <CheckCircle2 className="w-7 h-7" />
+                            <span className="text-[13px] font-black uppercase tracking-widest">Bio-Profile Locked</span>
+                          </div>
+                          <button 
+                            onClick={retryAnalysis}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-emerald-500/10 border border-white/10 rounded-xl text-neutral-400 hover:text-emerald-400 transition-all group"
+                          >
+                            <RefreshCcw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-700" />
+                            <span className="text-[9px] font-black uppercase">Re-Analyze</span>
+                          </button>
+                        </div>
+                        <p className="text-[13px] text-neutral-600 leading-relaxed font-medium italic overflow-y-auto max-h-56 pr-5 custom-scrollbar">{characterProfile}</p>
+                        <div className="flex gap-2">
+                            {isHairLocked && <div className="px-3 py-1 bg-emerald-500/20 rounded-lg border border-emerald-500/30 flex items-center gap-2"><Scissors className="w-3.5 h-3.5 text-emerald-400" /><span className="text-[9px] font-black text-emerald-400">HAIR_FIXED</span></div>}
+                            {isBodyLocked && <div className="px-3 py-1 bg-emerald-500/20 rounded-lg border border-emerald-500/30 flex items-center gap-2"><User className="w-3.5 h-3.5 text-emerald-400" /><span className="text-[9px] font-black text-emerald-400">FRAME_FIXED</span></div>}
+                        </div>
                       </div>
-                      <button 
-                        onClick={retryAnalysis}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-emerald-500/10 border border-white/10 rounded-xl text-neutral-400 hover:text-emerald-400 transition-all group"
-                      >
-                        <RefreshCcw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-700" />
-                        <span className="text-[9px] font-black uppercase">Fix Details</span>
-                      </button>
+                    ) : (
+                      <div className="p-10 bg-amber-500/5 rounded-[2.5rem] border border-amber-500/10 space-y-6">
+                        <div className="flex items-center gap-4 text-amber-400">
+                          <AlertCircle className="w-7 h-7" />
+                          <span className="text-[13px] font-black uppercase tracking-widest">No Profile Detected</span>
+                        </div>
+                        <button 
+                          onClick={triggerAnalysis}
+                          className="w-full flex items-center justify-center gap-3 py-5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded-2xl text-amber-400 transition-all"
+                        >
+                          <Wand2 className="w-5 h-5" />
+                          <span className="text-[12px] font-black uppercase tracking-widest">Run Analyzer</span>
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* MANUAL MODE: Show editable text area */}
+                {profileMode === 'manual' && (
+                  <div className="p-8 bg-violet-500/5 rounded-[2.5rem] border border-violet-500/10 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-violet-400">
+                        <PenLine className="w-6 h-6" />
+                        <span className="text-[13px] font-black uppercase tracking-widest">Manual Profile</span>
+                      </div>
+                      {manualCharacterProfile.trim().length > 0 && (
+                        <div className="flex items-center gap-2 text-violet-400">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span className="text-[9px] font-black uppercase tracking-widest">Ready</span>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-[13px] text-neutral-600 leading-relaxed font-medium italic overflow-y-auto max-h-56 pr-5 custom-scrollbar">{characterProfile}</p>
-                    <div className="flex gap-2">
-                        {isHairLocked && <div className="px-3 py-1 bg-emerald-500/20 rounded-lg border border-emerald-500/30 flex items-center gap-2"><Scissors className="w-3.5 h-3.5 text-emerald-400" /><span className="text-[9px] font-black text-emerald-400">HAIR_FIXED</span></div>}
-                        {isBodyLocked && <div className="px-3 py-1 bg-emerald-500/20 rounded-lg border border-emerald-500/30 flex items-center gap-2"><User className="w-3.5 h-3.5 text-emerald-400" /><span className="text-[9px] font-black text-emerald-400">FRAME_FIXED</span></div>}
+                    
+                    <textarea
+                      value={manualCharacterProfile}
+                      onChange={(e) => setManualCharacterProfile(e.target.value)}
+                      placeholder="Describe your character's appearance...
+
+Include details like:
+• Hair: color, length, style
+• Eyes: color, shape
+• Face: structure, skin tone
+• Body: build, proportions
+• Age and overall aesthetic"
+                      className="w-full h-48 bg-black/40 border border-white/10 focus:border-violet-500/50 rounded-2xl px-6 py-5 text-neutral-300 text-[13px] leading-relaxed outline-none resize-none placeholder:text-neutral-700 placeholder:italic"
+                    />
+
+                    <div className="flex items-center justify-between px-2">
+                      <span className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">
+                        {manualCharacterProfile.length} chars
+                      </span>
+                      <div className="flex gap-2">
+                        {isHairLocked && <div className="px-3 py-1 bg-violet-500/20 rounded-lg border border-violet-500/30 flex items-center gap-2"><Scissors className="w-3.5 h-3.5 text-violet-400" /><span className="text-[9px] font-black text-violet-400">HAIR_FIXED</span></div>}
+                        {isBodyLocked && <div className="px-3 py-1 bg-violet-500/20 rounded-lg border border-violet-500/30 flex items-center gap-2"><User className="w-3.5 h-3.5 text-violet-400" /><span className="text-[9px] font-black text-violet-400">FRAME_FIXED</span></div>}
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {characterProfile && (
+              {isProfileReady() && (
                 <div className="bg-[#111]/30 border border-white/5 rounded-[4rem] p-12 shadow-4xl backdrop-blur-3xl space-y-12">
                   <div className="flex items-center gap-5"><Sliders className="w-7 h-7 text-emerald-400" /><h2 className="text-[12px] font-black text-neutral-600 uppercase tracking-[0.5em]">Identity Fine-Tuning</h2></div>
                   <div className="space-y-10">
@@ -626,22 +853,35 @@ const App: React.FC = () => {
             </div>
 
             <div className="lg:col-span-8 space-y-16">
-              {characterProfile && (
+              {isProfileReady() && (
                 <div className="bg-[#0e0e0e] border border-white/5 rounded-[5rem] overflow-hidden shadow-6xl transition-all duration-1000">
                   <div className="p-14 border-b border-white/5 flex items-center justify-between bg-black/20">
                     <div className="flex items-center gap-8">
-                      <div className="p-6 bg-emerald-500/10 rounded-[2.5rem] border border-emerald-500/20 shadow-2xl"><Grid className="w-10 h-10 text-emerald-400" /></div>
+                      <div className={`p-6 rounded-[2.5rem] border shadow-2xl ${profileMode === 'auto' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-violet-500/10 border-violet-500/20'}`}>
+                        <Grid className={`w-10 h-10 ${profileMode === 'auto' ? 'text-emerald-400' : 'text-violet-400'}`} />
+                      </div>
                       <div>
                         <h3 className="text-4xl font-black tracking-tighter uppercase text-neutral-200">Dataset Generator</h3>
-                        <p className="text-[14px] text-neutral-600 font-black uppercase tracking-[0.5em] mt-2">Active Target: {projectName}</p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <p className="text-[14px] text-neutral-600 font-black uppercase tracking-[0.5em]">Active Target: {projectName}</p>
+                          <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${profileMode === 'auto' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-violet-500/20 text-violet-400'}`}>
+                            {profileMode === 'auto' ? 'AUTO PROFILE' : 'MANUAL PROFILE'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-14">
                       <div className="text-right">
-                        <p className="text-xl font-black text-emerald-400 uppercase tracking-[0.5em]">{selectedPoseIds.size} SELECTED</p>
+                        <p className={`text-xl font-black uppercase tracking-[0.5em] ${profileMode === 'auto' ? 'text-emerald-400' : 'text-violet-400'}`}>{selectedPoseIds.size} SELECTED</p>
                         <p className="text-[12px] text-neutral-700 font-bold uppercase tracking-widest">Frames in queue</p>
                       </div>
-                      <button disabled={task.status === 'generating' || selectedPoseIds.size === 0} onClick={startDatasetMode} className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-20 text-white px-16 py-7 rounded-[2.5rem] text-[15px] font-black uppercase tracking-[0.1em] transition-all shadow-5xl active:scale-95">Generate Batch</button>
+                      <button 
+                        disabled={task.status === 'generating' || selectedPoseIds.size === 0} 
+                        onClick={startDatasetMode} 
+                        className={`px-16 py-7 rounded-[2.5rem] text-[15px] font-black uppercase tracking-[0.1em] transition-all shadow-5xl active:scale-95 disabled:opacity-20 text-white ${profileMode === 'auto' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-violet-600 hover:bg-violet-500'}`}
+                      >
+                        Generate Batch
+                      </button>
                     </div>
                   </div>
                   <div className="p-8 grid grid-cols-3 gap-6 bg-black/80 border-b border-white/5">
@@ -661,10 +901,10 @@ const App: React.FC = () => {
                           onClick={() => togglePoseSelection(pose.id)}
                           onMouseEnter={() => setHoveredPoseId(pose.id)}
                           onMouseLeave={() => setHoveredPoseId(null)}
-                          className={`group relative p-6 rounded-[2rem] border-2 transition-all cursor-pointer ${selectedPoseIds.has(pose.id) ? 'bg-emerald-500/10 border-emerald-500 shadow-xl' : 'bg-black/40 border-white/5 hover:border-white/20'}`}
+                          className={`group relative p-6 rounded-[2rem] border-2 transition-all cursor-pointer ${selectedPoseIds.has(pose.id) ? (profileMode === 'auto' ? 'bg-emerald-500/10 border-emerald-500' : 'bg-violet-500/10 border-violet-500') + ' shadow-xl' : 'bg-black/40 border-white/5 hover:border-white/20'}`}
                         >
                           <div className="flex justify-between items-start mb-4">
-                            <div className={`p-2 rounded-lg ${selectedPoseIds.has(pose.id) ? 'bg-emerald-500 text-black' : 'bg-white/5 text-neutral-600'}`}>
+                            <div className={`p-2 rounded-lg ${selectedPoseIds.has(pose.id) ? (profileMode === 'auto' ? 'bg-emerald-500 text-black' : 'bg-violet-500 text-white') : 'bg-white/5 text-neutral-600'}`}>
                               {selectedPoseIds.has(pose.id) ? <CheckCircle2 className="w-4 h-4" /> : <Fingerprint className="w-4 h-4" />}
                             </div>
                             <span className="text-[10px] font-black text-neutral-700">{pose.id.toUpperCase()}</span>
@@ -677,7 +917,7 @@ const App: React.FC = () => {
                   )}
                   
                   <div className="p-10 bg-black/40 border-t border-white/5 flex justify-between items-center">
-                    <button onClick={selectRecommended702010} className="text-[11px] font-black text-emerald-500 uppercase tracking-widest hover:text-emerald-400 transition-colors">Select All Protocol</button>
+                    <button onClick={selectRecommended702010} className={`text-[11px] font-black uppercase tracking-widest transition-colors ${profileMode === 'auto' ? 'text-emerald-500 hover:text-emerald-400' : 'text-violet-500 hover:text-violet-400'}`}>Select All Protocol</button>
                     <div className="flex gap-4">
                       <button onClick={() => setSelectedPoseIds(new Set())} className="text-[11px] font-black text-neutral-600 uppercase tracking-widest hover:text-neutral-400 transition-colors">Clear Selection</button>
                     </div>
@@ -758,7 +998,7 @@ const App: React.FC = () => {
           <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-[0.4em]">Proprietary Generation Engine &copy; 2024</p>
           <div className="flex gap-10">
             <div className="flex items-center gap-3"><Terminal className="w-4 h-4 text-emerald-500" /><p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">System Stable</p></div>
-            <div className="flex items-center gap-3"><History className="w-4 h-4 text-neutral-700" /><p className="text-[10px] font-black text-neutral-700 uppercase tracking-widest">Matrix Rev 09</p></div>
+            <div className="flex items-center gap-3"><History className="w-4 h-4 text-neutral-700" /><p className="text-[10px] font-black text-neutral-700 uppercase tracking-widest">Matrix Rev 10</p></div>
           </div>
         </div>
       </footer>
